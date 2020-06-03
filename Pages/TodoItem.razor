@@ -1,0 +1,96 @@
+﻿@inject IJSRuntime JSRuntime
+
+<li class="@ClassName">
+    <div class="view">
+        <input class="toggle"
+               type="checkbox"
+               checked="@Todo.Completed"
+               @onchange="@OnToggle" />
+        <label @ondblclick="@HandleEdit">
+            @Todo.Title
+        </label>
+        <button class="destroy" @onclick="@OnDestroy" />
+    </div>
+    <input @ref="editField"
+           class="edit"
+           @bind="@EditText"
+           @bind:event="oninput"
+           @onchange="@HandleChange"
+           @onblur="@HandleSubmit"
+           @onkeydown="@HandleKeyDown" />
+</li>
+
+@code {
+    [Parameter]
+    public Guid Key { get; set; }
+
+    [Parameter]
+    public Todo Todo { get; set; }
+
+    [Parameter]
+    public Func<Task> OnToggle { get; set; }
+
+    [Parameter]
+    public Func<Task> OnDestroy { get; set; }
+
+    [Parameter]
+    public Action OnEdit { get; set; }
+
+    [Parameter]
+    public bool Editing { get; set; }
+
+    [Parameter]
+    public Func<string, Task> OnSave { get; set; }
+
+    [Parameter]
+    public Action OnCancel { get; set; }
+
+    ElementReference editField;
+
+    string EditText { get; set; } = "";
+
+    string ClassName => string.Join(" ", (Todo.Completed ? "completed" : ""), (Editing ? "editing" : ""));
+
+    async Task HandleEdit()
+    {
+        OnEdit();
+        EditText = Todo.Title;
+        await JSRuntime.InvokeVoidAsync("focusEditField", editField); // lib/interop.js
+    }
+
+    async Task HandleSubmit()
+    {
+        var val = EditText.Trim();
+        if (val != string.Empty)
+        {
+            await OnSave(val);
+            EditText = val;
+        }
+        else
+        {
+            await OnDestroy();
+        }
+    }
+
+    void HandleChange(ChangeEventArgs e)
+    {
+        if (Editing)
+        {
+            EditText = e.Value.ToString();
+        }
+    }
+
+    async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key.Equals("Escape"))
+        {
+            EditText = Todo.Title;
+            OnCancel();
+        }
+        else if (e.Key.Equals("Enter"))
+        {
+            await HandleSubmit();
+        }
+    }
+
+}

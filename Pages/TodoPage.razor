@@ -1,0 +1,122 @@
+﻿@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+<header class="header">
+    <h1>todos</h1>
+    <input class="new-todo"
+           placeholder="What needs to be done?"
+           @bind="NewTodo"
+           @bind:event="oninput"
+           @onkeydown="HandleNewTodoKeyDown"
+           autofocus />
+</header>
+@if (AllCount > 0)
+{
+    <section class="main">
+        <input id="toggle-all"
+               class="toggle-all"
+               type="checkbox"
+               @onchange="ToggleAll"
+               checked="@ToggleAllChecked" />
+        <label for="toggle-all" />
+        <ul class="todo-list">
+            @foreach (var todo in TodoModel.Todos.Where(Filter))
+            {
+                <TodoItem Key="@todo.Id"
+                          Todo="@todo"
+                          OnToggle="@(() => Toggle(todo))"
+                          OnDestroy="@(() => Destroy(todo))"
+                          OnEdit="@(() => Edit(todo))"
+                          Editing="@(Editing?.Equals(todo.Id) ?? false)"
+                          OnSave="@(text => Save(todo, text))"
+                          OnCancel="@Cancel" />
+            }
+        </ul>
+    </section>
+    <TodoFooter Count="@ActiveToDoCount"
+                CompletedCount="@CompletedCount"
+                NowShowing="@NowShowing"
+                OnClearCompleted="@ClearCompleted" />
+}
+
+@code {
+    [Parameter]
+    public Func<Todo, bool> Filter { get; set; }
+
+    [Parameter]
+    public string NowShowing { get; set; }
+
+    private const string ENTER_KEY = "Enter";
+
+    public TodoModel TodoModel { get; set; }
+
+    public Guid? Editing { get; set; }
+
+    public string NewTodo { get; set; }
+
+    public int AllCount => TodoModel.Todos?.Count() ?? 0;
+
+    public int CompletedCount => TodoModel.Todos?.Count(todo => todo.Completed) ?? 0;
+
+    public int ActiveToDoCount => TodoModel.Todos?.Count(todo => !todo.Completed) ?? 0;
+
+    public bool ToggleAllChecked => ActiveToDoCount == 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        TodoModel = new TodoModel(localStorage);
+        await TodoModel.Fetch();
+        TodoModel.Subscribe(StateHasChanged);
+    }
+
+    public async Task HandleNewTodoKeyDown(KeyboardEventArgs e)
+    {
+        if (!e.Key.Equals(ENTER_KEY))
+        {
+            return;
+        }
+        var val = NewTodo.Trim();
+        if (val != string.Empty)
+        {
+            await TodoModel.AddTodo(val);
+            NewTodo = "";
+        }
+    }
+
+    public async Task ToggleAll(ChangeEventArgs e)
+    {
+        await TodoModel.ToggleAll((bool)e.Value);
+    }
+
+    public async Task ClearCompleted()
+    {
+        await TodoModel.ClearCompleted();
+    }
+
+    public async Task Toggle(Todo todo)
+    {
+        await TodoModel.Toggle(todo);
+    }
+
+    public async Task Destroy(Todo todo)
+    {
+        await TodoModel.Destroy(todo);
+    }
+
+    public void Edit(Todo todo)
+    {
+        Editing = todo.Id;
+        StateHasChanged();
+    }
+
+    public async Task Save(Todo todoToSave, string text)
+    {
+        Editing = null;
+        await TodoModel.Save(todoToSave, text);
+    }
+
+    public void Cancel()
+    {
+        Editing = null;
+        StateHasChanged();
+    }
+}

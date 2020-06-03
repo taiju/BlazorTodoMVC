@@ -1,0 +1,38 @@
+﻿<footer class="footer">
+    <span class="todo-count">
+        <strong>@Count</strong> @ActiveTodoWord()
+    </span>
+    <ul class="filters">
+        <li><a href="/" class="@SelectedIsShowing("all")">All</a></li>
+        <li><a href="/active" class="@SelectedIsShowing("active")">Active</a></li>
+        <li><a href="/completed" class="@SelectedIsShowing("completed")">Completed</a></li>
+    </ul>
+    @if (CompletedCount > 0)
+    {
+        <button class="clear-completed" @onclick="@OnClearCompleted">
+            Clear completed
+        </button>
+    }
+</footer>
+
+@code {
+    [Parameter]
+    public string NowShowing { get; set; }
+
+    [Parameter]
+    public int Count { get; set; }
+
+    [Parameter]
+    public int CompletedCount { get; set; }
+
+    [Parameter]
+    public Func<Task> OnClearCompleted { get; set; }
+
+    bool IsShowing(string name) => NowShowing.Equals(name);
+
+    string Selected(bool isSelected) => isSelected ? "selected" : "";
+
+    string SelectedIsShowing(string name) => Selected(IsShowing(name));
+
+    string ActiveTodoWord() => "item" + (Count.Equals(1) ? "" : "s") + " left";
+}
