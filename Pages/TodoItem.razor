@@ -15,7 +15,6 @@
            class="edit"
            @bind="@EditText"
            @bind:event="oninput"
-           @onchange="@HandleChange"
            @onblur="@HandleSubmit"
            @onkeydown="@HandleKeyDown" />
 </li>
@@ -69,14 +68,6 @@
         else
         {
             await OnDestroy();
-        }
-    }
-
-    void HandleChange(ChangeEventArgs e)
-    {
-        if (Editing)
-        {
-            EditText = e.Value.ToString();
         }
     }
 
