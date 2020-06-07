@@ -21,8 +21,8 @@
         <ul class="todo-list">
             @foreach (var todo in TodoModel.Todos.Where(Filter))
             {
-                <TodoItem Key="@todo.Id"
-                          Todo="@todo"
+                // TODO: @key="todo.Id" を指定して無駄なレンダリングを抑制したいが、これを指定するとエラーが発生してしまうため今は指定していない
+                <TodoItem Todo="@todo"
                           OnToggle="@(() => Toggle(todo))"
                           OnDestroy="@(() => Destroy(todo))"
                           OnEdit="@(() => Edit(todo))"

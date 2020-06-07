@@ -56,6 +56,11 @@
 
     async Task HandleSubmit()
     {
+        // TODO: 1つ前の兄弟要素をDestroyした時になぜか次の兄弟要素のblurイベント発火されてしまうため、編集対象でない場合にblurイベントが発火されても無視するようにした
+        if (!Editing)
+        {
+            return;
+        }
         var val = EditText.Trim();
         if (val != string.Empty)
         {
