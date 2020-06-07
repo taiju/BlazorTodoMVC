@@ -15,7 +15,7 @@ namespace TodoMVC
 
         private List<Action> OnChanges { get; set; } = new List<Action>();
 
-        private ILocalStorageService localStorage;
+        private readonly ILocalStorageService localStorage;
 
         public TodoModel(ILocalStorageService localStorage)
         {
